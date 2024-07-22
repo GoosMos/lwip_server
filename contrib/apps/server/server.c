@@ -203,6 +203,7 @@ server_raw_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
     pbuf_free(p);
     ret_err = ERR_OK;
   }
+  printf("\n%s\n",(char *) p->payload);
   printf("server received message\n");
   return ret_err;
 }
