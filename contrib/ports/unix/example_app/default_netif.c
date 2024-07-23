@@ -51,7 +51,7 @@ void init_default_netif(void)
 {
 #if NO_SYS
 /* netif_add(&netif, NETIF_ADDRS NULL, tapif_init, netif_input); */
-  netif_add(&netif, NETIF_ADDRS NULL, ethernetif_init, netif_input);
+  netif_add(&netif, NETIF_ADDRS NULL, tapif_init, netif_input);
 #else
   netif_add(&netif, NETIF_ADDRS NULL, tapif_init, tcpip_input);
 #endif

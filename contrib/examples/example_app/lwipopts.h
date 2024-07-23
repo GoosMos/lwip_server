@@ -45,7 +45,7 @@
 
 #ifdef LWIP_DEBUG
 
-#define LWIP_DBG_MIN_LEVEL         0
+#define LWIP_DBG_MIN_LEVEL         1
 #define PPP_DEBUG                  LWIP_DBG_OFF
 #define MEM_DEBUG                  LWIP_DBG_OFF
 #define MEMP_DEBUG                 LWIP_DBG_OFF
