@@ -1,5 +1,5 @@
 /**
- * @file
+ @file
  * Ethernet Interface Skeleton
  *
  */
@@ -45,7 +45,6 @@
 
 #include "lwip/opt.h"
 
-#if 0 /* don't build, this is only a skeleton, see previous comment */
 
 #include "lwip/def.h"
 #include "lwip/mem.h"
@@ -55,7 +54,7 @@
 #include "lwip/ethip6.h"
 #include "lwip/etharp.h"
 #include "netif/ppp/pppoe.h"
-
+#include <string.h>
 /* Define those to better describe your network interface. */
 #define IFNAME0 'e'
 #define IFNAME1 'n'
@@ -69,11 +68,13 @@
 struct ethernetif {
   struct eth_addr *ethaddr;
   /* Add whatever per-interface state that is needed here. */
+  int fd;
 };
 
 /* Forward declarations. */
 static void  ethernetif_input(struct netif *netif);
-
+void ethernetif_poll(struct netif *netif);
+err_t ethernetif_init(struct netif *netif);
 /**
  * In this function, the hardware should be initialized.
  * Called from ethernetif_init().
@@ -84,15 +85,18 @@ static void  ethernetif_input(struct netif *netif);
 static void
 low_level_init(struct netif *netif)
 {
-  struct ethernetif *ethernetif = netif->state;
+  /*struct ethernetif *ethernetif = (struct ethernetif *)netif->state;*/
 
   /* set MAC hardware address length */
   netif->hwaddr_len = ETHARP_HWADDR_LEN;
 
   /* set MAC hardware address */
-  netif->hwaddr[0] = ;
-  ...
-  netif->hwaddr[5] = ;
+  netif->hwaddr[0] = 0x00;
+  netif->hwaddr[1] = 0x01;
+  netif->hwaddr[2] = 0x02;
+  netif->hwaddr[3] = 0x03;
+  netif->hwaddr[4] = 0x04;
+  netif->hwaddr[5] = 0x05;
 
   /* maximum transfer unit */
   netif->mtu = 1500;
@@ -136,41 +140,72 @@ low_level_init(struct netif *netif)
 static err_t
 low_level_output(struct netif *netif, struct pbuf *p)
 {
-  struct ethernetif *ethernetif = netif->state;
+  /*struct ethernetif *ethernetif = (struct ethernetif *)netif->state;*/
+  char buf[1518];
+  size_t written;
   struct pbuf *q;
+  size_t buf_len = 0;
 
-  initiate transfer();
+  /* initiate transfer(); */
 
+  if (p->tot_len > sizeof(buf)) {  /* check packet size */
+	  MIB2_STATS_NETIF_INC(netif, ifoutdiscards);
+	  perror("ethernetif: packet too large");
+	  return ERR_IF;
+  }
+
+
+
+/*
 #if ETH_PAD_SIZE
-  pbuf_remove_header(p, ETH_PAD_SIZE); /* drop the padding word */
+  pbuf_remove_header(p, ETH_PAD_SIZE); 
 #endif
-
+*/
   for (q = p; q != NULL; q = q->next) {
     /* Send the data from the pbuf to the interface, one pbuf at a
        time. The size of the data in each pbuf is kept in the ->len
        variable. */
-    send data from(q->payload, q->len);
+	MIB2_STATS_NETIF_INC(netif, ifoutdiscards);
+	perror("ethernetif: packet too large in pbuf chain");
+	return ERR_IF;
+    /* send data from(q->payload, q->len); */
+	memcpy(&buf[buf_len], q->payload, q->len);
+    buf_len += q->len;
   }
 
-  signal that packet should be sent();
-
+  /* signal that packet should be sent(); */
+  pbuf_copy_partial(p, buf, p->tot_len, 0);
+  written = write(((struct ethernetif *)netif->state)->fd, buf, buf_len);
+  if (written < buf_len) {
+    MIB2_STATS_NETIF_INC(netif, ifoutdiscards);
+    perror("ethernetif: write");
+    return ERR_IF;
+  } else {
+    MIB2_STATS_NETIF_ADD(netif, ifoutoctets, (u32_t)written);
+    if (((u8_t *)p->payload)[0] & 1) {
+      /* broadcast or multicast packet*/
+      MIB2_STATS_NETIF_INC(netif, ifoutnucastpkts);
+    } else {
+      /* unicast packet */
+      MIB2_STATS_NETIF_INC(netif, ifoutucastpkts);
+    }
+    return ERR_OK;
+  }
+/*
   MIB2_STATS_NETIF_ADD(netif, ifoutoctets, p->tot_len);
   if (((u8_t *)p->payload)[0] & 1) {
-    /* broadcast or multicast packet*/
     MIB2_STATS_NETIF_INC(netif, ifoutnucastpkts);
   } else {
-    /* unicast packet */
     MIB2_STATS_NETIF_INC(netif, ifoutucastpkts);
   }
-  /* increase ifoutdiscards or ifouterrors on error */
 
 #if ETH_PAD_SIZE
-  pbuf_add_header(p, ETH_PAD_SIZE); /* reclaim the padding word */
+  pbuf_add_header(p, ETH_PAD_SIZE); 
 #endif
 
   LINK_STATS_INC(link.xmit);
 
-  return ERR_OK;
+  return ERR_OK;*/
 }
 
 /**
@@ -184,14 +219,24 @@ low_level_output(struct netif *netif, struct pbuf *p)
 static struct pbuf *
 low_level_input(struct netif *netif)
 {
-  struct ethernetif *ethernetif = netif->state;
+  struct ethernetif *ethernetif = (struct ethernetif *)netif->state;
   struct pbuf *p, *q;
   u16_t len;
+  size_t readlen;
+  char buf[1518];
+  char *buf_ptr;
 
   /* Obtain the size of the packet and put it into the "len"
      variable. */
-  len = ;
+  readlen = read(ethernetif->fd, buf, sizeof(buf));
+  /*
+  if (readlen < 0) {
+	  perror("read returned -1");
+	  exit(1);
+  }*/
+  len = (u16_t)readlen;
 
+  MIB2_STATS_NETIF_ADD(netif, ifinoctets, len);
 #if ETH_PAD_SIZE
   len += ETH_PAD_SIZE; /* allow room for Ethernet padding */
 #endif
@@ -200,6 +245,7 @@ low_level_input(struct netif *netif)
   p = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
 
   if (p != NULL) {
+	buf_ptr = buf;
 
 #if ETH_PAD_SIZE
     pbuf_remove_header(p, ETH_PAD_SIZE); /* drop the padding word */
@@ -216,9 +262,11 @@ low_level_input(struct netif *netif)
        * actually received size. In this case, ensure the tot_len member of the
        * pbuf is the sum of the chained pbuf len members.
        */
-      read data into(q->payload, q->len);
+      /*read data into(q->payload, q->len);*/
+		memcpy(q->payload, buf_ptr, q->len);
+		buf_ptr += q->len;
     }
-    acknowledge that packet has been read();
+    /*acknowledge that packet has been read();*/
 
     MIB2_STATS_NETIF_ADD(netif, ifinoctets, p->tot_len);
     if (((u8_t *)p->payload)[0] & 1) {
@@ -234,10 +282,11 @@ low_level_input(struct netif *netif)
 
     LINK_STATS_INC(link.recv);
   } else {
-    drop packet();
+    /*drop packet();*/
     LINK_STATS_INC(link.memerr);
     LINK_STATS_INC(link.drop);
     MIB2_STATS_NETIF_INC(netif, ifindiscards);
+	LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: could not allocate pbuf\n"));
   }
 
   return p;
@@ -255,11 +304,11 @@ low_level_input(struct netif *netif)
 static void
 ethernetif_input(struct netif *netif)
 {
-  struct ethernetif *ethernetif;
-  struct eth_hdr *ethhdr;
+  /*struct ethernetif *ethernetif;*/
+  /*struct eth_hdr *ethhdr;*/
   struct pbuf *p;
 
-  ethernetif = netif->state;
+  /* ethernetif = (struct ethernetif *)netif->state; */
 
   /* move received packet into a new pbuf */
   p = low_level_input(netif);
@@ -293,23 +342,22 @@ ethernetif_init(struct netif *netif)
 
   LWIP_ASSERT("netif != NULL", (netif != NULL));
 
-  ethernetif = mem_malloc(sizeof(struct ethernetif));
+  ethernetif = (struct ethernetif *)mem_malloc(sizeof(struct ethernetif));
   if (ethernetif == NULL) {
     LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_init: out of memory\n"));
     return ERR_MEM;
   }
-
+/*
 #if LWIP_NETIF_HOSTNAME
-  /* Initialize interface hostname */
   netif->hostname = "lwip";
-#endif /* LWIP_NETIF_HOSTNAME */
+#endif */ 
 
   /*
    * Initialize the snmp variables and counters inside the struct netif.
    * The last argument should be replaced with your link speed, in units
    * of bits per second.
    */
-  MIB2_INIT_NETIF(netif, snmp_ifType_ethernet_csmacd, LINK_SPEED_OF_YOUR_NETIF_IN_BPS);
+  MIB2_INIT_NETIF(netif, snmp_ifType_ethernet_csmacd, 100000000);
 
   netif->state = ethernetif;
   netif->name[0] = IFNAME0;
@@ -325,6 +373,7 @@ ethernetif_init(struct netif *netif)
   netif->output_ip6 = ethip6_output;
 #endif /* LWIP_IPV6 */
   netif->linkoutput = low_level_output;
+  netif->mtu = 1500;
 
   ethernetif->ethaddr = (struct eth_addr *) & (netif->hwaddr[0]);
 
@@ -334,4 +383,9 @@ ethernetif_init(struct netif *netif)
   return ERR_OK;
 }
 
-#endif /* 0 */
+
+void
+ethernetif_poll(struct netif *netif) 
+{
+	ethernetif_input(netif);
+}

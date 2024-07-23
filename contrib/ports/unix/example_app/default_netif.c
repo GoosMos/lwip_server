@@ -37,6 +37,7 @@
 #include "lwip/tcpip.h"
 #include "netif/tapif.h"
 #include "examples/example_app/default_netif.h"
+#include "examples/ethernetif/ethernetif.c"
 
 static struct netif netif;
 
@@ -49,7 +50,8 @@ void init_default_netif(void)
 #endif
 {
 #if NO_SYS
-netif_add(&netif, NETIF_ADDRS NULL, tapif_init, netif_input);
+/* netif_add(&netif, NETIF_ADDRS NULL, tapif_init, netif_input); */
+  netif_add(&netif, NETIF_ADDRS NULL, ethernetif_init, netif_input);
 #else
   netif_add(&netif, NETIF_ADDRS NULL, tapif_init, tcpip_input);
 #endif
