@@ -49,7 +49,6 @@ server_raw_close(struct tcp_pcb *tpcb, struct server_state *es)
 
   server_raw_free(es);
 
-  printf("close connection\n");
   tcp_close(tpcb);
 }
 
@@ -250,19 +249,12 @@ server_raw_init(void)
   server_pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
   if (server_pcb != NULL) {
     err_t err;
-/*
-	ip_addr_t server_ip;
-	IP_ADDR4(&server_ip, 192, 168, 1, 100);
-  
-	err = tcp_bind(server_pcb, &server_ip, 7);
-	*/
+	
 	err = tcp_bind(server_pcb, IP_ANY_TYPE, 7);
     if (err == ERR_OK) {
 		printf("server init success\n");
 		server_pcb = tcp_listen(server_pcb);
-		/* server_pcb->state = 0;*/
 		tcp_accept(server_pcb, server_raw_accept);
-
     } else {
       /* abort? output diagnostic? */
     }
