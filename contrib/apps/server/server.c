@@ -63,6 +63,7 @@ server_raw_send(struct tcp_pcb *tpcb, struct server_state *es)
          (es->p->len <= tcp_sndbuf(tpcb))) {
     ptr = es->p;
 
+	printf("\n%s\n",(char *) ptr->payload);
     /* enqueue data for transmission */
     wr_err = tcp_write(tpcb, ptr->payload, ptr->len, 1);
     if (wr_err == ERR_OK) {
@@ -202,7 +203,6 @@ server_raw_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
     pbuf_free(p);
     ret_err = ERR_OK;
   }
-  printf("\n%s\n",(char *) p->payload);
   printf("server received message\n");
   return ret_err;
 }
