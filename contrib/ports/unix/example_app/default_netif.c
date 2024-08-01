@@ -61,7 +61,8 @@ void init_default_netif(void)
 void
 default_netif_poll(void)
 {
-  tapif_poll(&netif);
+  /*tapif_poll(&netif);*/
+  netif_poll(&netif);
 }
 
 void

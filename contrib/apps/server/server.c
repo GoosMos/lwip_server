@@ -246,11 +246,13 @@ server_raw_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
 void
 server_raw_init(void)
 {
+  ip_addr_t loop_ip;
+  IP_ADDR4(&loop_ip, 127, 0, 0, 1);
   server_pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
   if (server_pcb != NULL) {
     err_t err;
 	
-	err = tcp_bind(server_pcb, IP_ANY_TYPE, 7);
+	err = tcp_bind(server_pcb, &loop_ip, 7);
     if (err == ERR_OK) {
 		printf("server init success\n");
 		server_pcb = tcp_listen(server_pcb);

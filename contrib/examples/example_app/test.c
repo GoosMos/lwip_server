@@ -288,6 +288,7 @@ link_callback(struct netif *state_netif)
 static void
 test_netif_init(void)
 {
+  struct netif *temp;
 #if LWIP_IPV4 && USE_ETHERNET
   ip4_addr_t ipaddr, netmask, gw;
 #endif /* LWIP_IPV4 && USE_ETHERNET */
@@ -346,27 +347,28 @@ test_netif_init(void)
   LWIP_PORT_INIT_GW(&gw);
   LWIP_PORT_INIT_IPADDR(&ipaddr);
   LWIP_PORT_INIT_NETMASK(&netmask);
-  printf("Starting lwIP, local interface IP is %s\n", ip4addr_ntoa(&ipaddr));
+ /* printf("Starting lwIP, local interface IP is %s\n", ip4addr_ntoa(&ipaddr));*/
 #endif /* USE_DHCP */
 #endif /* USE_ETHERNET_TCPIP */
 #else /* LWIP_IPV4 */
   printf("Starting lwIP, IPv4 disable\n");
 #endif /* LWIP_IPV4 */
 
-#if LWIP_IPV4
-  init_default_netif(&ipaddr, &netmask, &gw);
+#if LWIP_IPV4/*
+  init_default_netif(&ipaddr, &netmask, &gw);*/
 #else
-  init_default_netif();
+  /*init_default_netif();*/
 #endif
 #if LWIP_IPV6
   netif_create_ip6_linklocal_address(netif_default, 1);
   printf("ip6 linklocal address: %s\n", ip6addr_ntoa(netif_ip6_addr(netif_default, 0)));
 #endif /* LWIP_IPV6 */
 #if LWIP_NETIF_STATUS_CALLBACK
-  netif_set_status_callback(netif_default, status_callback);
+  temp = &netif_list[0];
+  netif_set_status_callback(temp, status_callback);
 #endif /* LWIP_NETIF_STATUS_CALLBACK */
 #if LWIP_NETIF_LINK_CALLBACK
-  netif_set_link_callback(netif_default, link_callback);
+  netif_set_link_callback(temp, link_callback);
 #endif /* LWIP_NETIF_LINK_CALLBACK */
 
 #if USE_ETHERNET_TCPIP
