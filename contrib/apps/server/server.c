@@ -213,6 +213,7 @@ server_raw_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
   err_t ret_err;
   struct server_state *es;
 
+  printf("client try connection\n");
   LWIP_UNUSED_ARG(arg);
   if ((err != ERR_OK) || (newpcb == NULL)) {
     return ERR_VAL;
@@ -247,7 +248,7 @@ void
 server_raw_init(void)
 {
 	ip_addr_t server_ip;
-	IP4_ADDR(&server_ip, 192, 168, 1, 100);
+	IP4_ADDR(&server_ip, 127, 0, 0, 1);
 	server_pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
 	if (server_pcb != NULL) {
 		err_t err;
