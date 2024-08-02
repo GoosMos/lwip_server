@@ -246,21 +246,23 @@ server_raw_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
 void
 server_raw_init(void)
 {
-  server_pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
-  if (server_pcb != NULL) {
-    err_t err;
-	
-	err = tcp_bind(server_pcb, IP_ADDR_ANY, 8080);
-    if (err == ERR_OK) {
-		server_pcb = tcp_listen(server_pcb);
-		tcp_accept(server_pcb, server_raw_accept);
-		printf("server init success\n");
-    } else {
-      /* abort? output diagnostic? */
-    }
-  } else {
+	ip_addr_t server_ip;
+	IP4_ADDR(&server_ip, 192, 168, 1, 100);
+	server_pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
+	if (server_pcb != NULL) {
+		err_t err;
+
+		err = tcp_bind(server_pcb, &server_ip, 8080);
+		if (err == ERR_OK) {
+			server_pcb = tcp_listen(server_pcb);
+			tcp_accept(server_pcb, server_raw_accept);
+			printf("server init success\n");
+		} else {
+		/* abort? output diagnostic? */
+		}
+	} else {
     /* abort? output diagnostic? */
-  }
+	}
 }
 
 #endif /* LWIP_TCP && LWIP_CALLBACK_API */
