@@ -1,4 +1,4 @@
-/* C runtime includes */
+/* C includes */
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -618,8 +618,11 @@ test_init(void * arg)
   srand((unsigned int)time(NULL));
 
   /* init network interfaces */
-  test_netif_init();
-
+  /*test_netif_init();*/
+  /*netif_add(&netif, &ipaddr, &netmask, &gw, NULL, netif_loopif_init, ip_input);
+   *netif_set_default(&netif);
+   *netif_set_up(&netif);
+  */
   /* init apps */
   apps_init();
 
@@ -674,7 +677,7 @@ main_loop(void)
 #endif /* NO_SYS */
 
 #if USE_ETHERNET
-    default_netif_poll();
+    /*default_netif_poll();*/
 #else /* USE_ETHERNET */
     /* try to read characters from serial line and pass them to PPPoS */
     count = sio_read(ppp_sio, (u8_t*)rxbuf, 1024);

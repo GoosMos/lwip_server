@@ -250,11 +250,11 @@ server_raw_init(void)
   if (server_pcb != NULL) {
     err_t err;
 	
-	err = tcp_bind(server_pcb, IP_ANY_TYPE, 7);
+	err = tcp_bind(server_pcb, IP_ADDR_ANY, 8080);
     if (err == ERR_OK) {
-		printf("server init success\n");
 		server_pcb = tcp_listen(server_pcb);
 		tcp_accept(server_pcb, server_raw_accept);
+		printf("server init success\n");
     } else {
       /* abort? output diagnostic? */
     }

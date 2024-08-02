@@ -109,6 +109,8 @@ extern "C" {
 /**
  * @}
  */
+err_t netif_loopif_init(struct netif *netif);
+
 
 enum lwip_internal_netif_client_data_index
 {
