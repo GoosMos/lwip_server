@@ -244,9 +244,15 @@ server_raw_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
   return ret_err;
 }
 
+err_t temp_func(void *arg, struct tcp_pcb *tpcb, err_t err) {
+	printf("connect check\n");
+	return ERR_OK;
+}
+
 void
 server_raw_init(void)
 {
+	/*struct tcp_pcb temp;*/
 	ip_addr_t server_ip;
 	IP4_ADDR(&server_ip, 127, 0, 0, 1);
 	server_pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
@@ -257,6 +263,7 @@ server_raw_init(void)
 		if (err == ERR_OK) {
 			server_pcb = tcp_listen(server_pcb);
 			tcp_accept(server_pcb, server_raw_accept);
+			/*tcp_connect(&temp, &server_ip, 8080, temp_func);*/
 			printf("server init success\n");
 		} else {
 		/* abort? output diagnostic? */

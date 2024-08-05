@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <pthread.h>
 
 /* lwIP core includes */
 #include "lwip/opt.h"
@@ -43,6 +44,7 @@
 
 /* add server */
 #include "apps/server/server.h"
+#include "apps/client/client.h"
 
 #include "examples/lwiperf/lwiperf_example.h"
 #include "examples/mdns/mdns_example.h"
@@ -484,7 +486,7 @@ dns_dorequest(void *arg)
   }
 }
 #endif /* LWIP_DNS_APP && LWIP_DNS */
-
+int flag = 0;
 /* This function initializes applications */
 static void
 apps_init(void)
@@ -499,12 +501,21 @@ apps_init(void)
 #endif /* LWIP_CHARGEN_APP && LWIP_SOCKET */
 
 #if LWIP_PING_APP && LWIP_RAW && LWIP_ICMP
-  ping_init(&netif_default->gw);
+  ip_addr_t temp;
+  IP4_ADDR(&temp, 192, 168, 1, 100);
+  /*ping_init(&netif_default->gw);*/
+  ping_init(&temp);
 #endif /* LWIP_PING_APP && LWIP_RAW && LWIP_ICMP */
 
 
 #if LWIP_SERVER_RAW_APP && LWIP_RAW && LWIP_ICMP
-  server_raw_init();
+  if (flag == 0){ 
+	  server_raw_init();
+	  flag++;
+  }
+  else {
+	  client_init();
+  }
 #endif /* LWIP_SERVER_APP && LWIP_RAW && LWIP_ICMP */
 
 
@@ -618,7 +629,7 @@ test_init(void * arg)
   srand((unsigned int)time(NULL));
 
   /* init network interfaces */
-  /*test_netif_init();*/
+  test_netif_init();
   /*netif_add(&netif, &ipaddr, &netmask, &gw, NULL, netif_loopif_init, ip_input);
    *netif_set_default(&netif)
    *netif_set_up(&netif);
@@ -635,6 +646,40 @@ test_init(void * arg)
  * a dedicated task that waits for packets to arrive. This would normally be
  * done from interrupt context with embedded hardware, but we don't get an
  * interrupt in windows for that :-) */
+static void
+client_loop(void)
+{
+	lwip_init();
+	test_init(NULL);
+	while (!LWIP_EXAMPLE_APP_ABORT()) {
+#if NO_SYS
+    /* handle timers (already done in tcpip.c when NO_SYS=0) */
+    sys_check_timeouts();
+#endif /* NO_SYS */
+
+#if USE_ETHERNET
+    /*default_netif_poll();*/
+#else /* USE_ETHERNET */
+    /* try to read characters from serial line and pass them to PPPoS */
+    count = sio_read(ppp_sio, (u8_t*)rxbuf, 1024);
+    if(count > 0) {
+      pppos_input(ppp, rxbuf, count);
+    } else {
+      /* nothing received, give other tasks a chance to run */
+      sys_msleep(1);
+    }
+
+#endif /* USE_ETHERNET */
+#if ENABLE_LOOPBACK && !LWIP_NETIF_LOOPBACK_MULTITHREADING
+    /* check for loopback packets on all netifs */
+    netif_poll_all();
+#endif
+	}
+}
+
+
+
+
 static void
 main_loop(void)
 {
@@ -677,7 +722,7 @@ main_loop(void)
 #endif /* NO_SYS */
 
 #if USE_ETHERNET
-    /*default_netif_poll();*/
+    default_netif_poll();
 #else /* USE_ETHERNET */
     /* try to read characters from serial line and pass them to PPPoS */
     count = sio_read(ppp_sio, (u8_t*)rxbuf, 1024);
@@ -756,6 +801,7 @@ int main(int argc, char **argv)
 int main(void)
 #endif /* USE_PPP && PPPOS_SUPPORT */
 {
+	/*pthread_t thread1, thread2;*/
 #if USE_PPP && PPPOS_SUPPORT
   if(argc > 1) {
     sio_idx = (u8_t)atoi(argv[1]);
@@ -764,7 +810,14 @@ int main(void)
 #endif /* USE_PPP && PPPOS_SUPPORT */
   /* no stdio-buffering, please! */
   setvbuf(stdout, NULL,_IONBF, 0);
+/*
+  pthread_create(&thread1, NULL, &main_loop, NULL);
+  sleep(3);
+  pthread_create(&thread2, NULL, &client_loop, NULL);
 
+  pthread_join(thread1, NULL);
+  pthread_join(thread2, NULL);
+  */
   main_loop();
 
   return 0;

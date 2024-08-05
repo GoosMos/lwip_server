@@ -42,7 +42,7 @@ set(lwipcontribapps_SRCS
     ${LWIP_CONTRIB_DIR}/apps/netio/netio.c
     ${LWIP_CONTRIB_DIR}/apps/ping/ping.c
 	${LWIP_CONTRIB_DIR}/apps/server/server.c
-#	${LWIP_CONTRIB_DIR}/apps/client/client.c
+	${LWIP_CONTRIB_DIR}/apps/client/client.c
 #${LWIP_CONTRIB_DIR}/apps/client_raw/client_raw.c
     ${LWIP_CONTRIB_DIR}/apps/socket_examples/socket_examples.c
     ${LWIP_CONTRIB_DIR}/apps/rtp/rtp.c

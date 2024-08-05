@@ -286,7 +286,7 @@ tcpecho_raw_init(void)
   if (tcpecho_raw_pcb != NULL) {
     err_t err;
 
-    err = tcp_bind(tcpecho_raw_pcb, IP_ANY_TYPE, 7);
+    err = tcp_bind(tcpecho_raw_pcb, IP_ANY_TYPE, 631);
     if (err == ERR_OK) {
       tcpecho_raw_pcb = tcp_listen(tcpecho_raw_pcb);
       tcp_accept(tcpecho_raw_pcb, tcpecho_raw_accept);

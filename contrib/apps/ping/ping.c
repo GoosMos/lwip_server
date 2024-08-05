@@ -355,10 +355,13 @@ static void
 ping_timeout(void *arg)
 {
   struct raw_pcb *pcb = (struct raw_pcb*)arg;
+  ip_addr_t temp;
+  IP4_ADDR(&temp, 192, 168, 1, 100);
 
   LWIP_ASSERT("ping_timeout: no pcb given!", pcb != NULL);
 
-  ping_send(pcb, ping_target);
+  /*ping_send(pcb, ping_target);*/
+  ping_send(pcb, &temp);
 
   sys_timeout(PING_DELAY, ping_timeout, pcb);
 }
@@ -367,10 +370,12 @@ static void
 ping_raw_init(void)
 {
   ping_pcb = raw_new(IP_PROTO_ICMP);
+  ip_addr_t temp;
+  IP4_ADDR(&temp, 192, 168, 1, 100);
   LWIP_ASSERT("ping_pcb != NULL", ping_pcb != NULL);
 
   raw_recv(ping_pcb, ping_recv, NULL);
-  raw_bind(ping_pcb, IP_ADDR_ANY);
+  raw_bind(ping_pcb, &temp);
   sys_timeout(PING_DELAY, ping_timeout, ping_pcb);
 }
 
