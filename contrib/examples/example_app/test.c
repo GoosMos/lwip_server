@@ -356,7 +356,7 @@ test_netif_init(void)
 #endif /* LWIP_IPV4 */
 
 #if LWIP_IPV4
-  init_default_netif(&ipaddr, &netmask, &gw);
+  /*init_default_netif(&ipaddr, &netmask, &gw);*/
 #else
   init_default_netif();
 #endif
@@ -515,6 +515,7 @@ apps_init(void)
   }
   else {
 	  client_init();
+	  flag--;
   }
 #endif /* LWIP_SERVER_APP && LWIP_RAW && LWIP_ICMP */
 
@@ -569,15 +570,6 @@ apps_init(void)
 #endif
 #endif /* LWIP_TCPECHO_APP && LWIP_NETCONN */
 
-/*
-#if LWIP_SERVER_RAW_APP
-  printf("custom server apps init\n");
-
-#endif
-  printf("dosen't call apps init\n");
-  server_raw_init();
-*/
-
 #if LWIP_UDPECHO_APP && LWIP_NETCONN
   udpecho_init();
 #endif /* LWIP_UDPECHO_APP && LWIP_NETCONN */
@@ -630,10 +622,7 @@ test_init(void * arg)
 
   /* init network interfaces */
   test_netif_init();
-  /*netif_add(&netif, &ipaddr, &netmask, &gw, NULL, netif_loopif_init, ip_input);
-   *netif_set_default(&netif)
-   *netif_set_up(&netif);
-  */
+
   /* init apps */
   apps_init();
 
@@ -649,33 +638,27 @@ test_init(void * arg)
 static void
 client_loop(void)
 {
-	lwip_init();
 	test_init(NULL);
 	while (!LWIP_EXAMPLE_APP_ABORT()) {
-#if NO_SYS
-    /* handle timers (already done in tcpip.c when NO_SYS=0) */
-    sys_check_timeouts();
-#endif /* NO_SYS */
-
-#if USE_ETHERNET
-    /*default_netif_poll();*/
-#else /* USE_ETHERNET */
-    /* try to read characters from serial line and pass them to PPPoS */
-    count = sio_read(ppp_sio, (u8_t*)rxbuf, 1024);
-    if(count > 0) {
-      pppos_input(ppp, rxbuf, count);
-    } else {
-      /* nothing received, give other tasks a chance to run */
-      sys_msleep(1);
-    }
-
-#endif /* USE_ETHERNET */
-#if ENABLE_LOOPBACK && !LWIP_NETIF_LOOPBACK_MULTITHREADING
-    /* check for loopback packets on all netifs */
-    netif_poll_all();
-#endif
+		sys_check_timeouts();
+		/*default_netif_poll();*/
+		netif_poll_all();
 	}
 }
+
+
+static void
+server_loop(void)
+{
+    lwip_init();
+    test_init(NULL);
+    while (!LWIP_EXAMPLE_APP_ABORT()) {
+		sys_check_timeouts();
+		/*default_netif_poll();*/
+		netif_poll_all();
+    }
+}
+
 
 
 
@@ -801,24 +784,17 @@ int main(int argc, char **argv)
 int main(void)
 #endif /* USE_PPP && PPPOS_SUPPORT */
 {
-	/*pthread_t thread1, thread2;*/
-#if USE_PPP && PPPOS_SUPPORT
-  if(argc > 1) {
-    sio_idx = (u8_t)atoi(argv[1]);
-  }
-  printf("Using serial port %d for PPP\n", sio_idx);
-#endif /* USE_PPP && PPPOS_SUPPORT */
-  /* no stdio-buffering, please! */
+  pthread_t thread1, thread2;
   setvbuf(stdout, NULL,_IONBF, 0);
-/*
-  pthread_create(&thread1, NULL, &main_loop, NULL);
+
+  pthread_create(&thread1, NULL, &server_loop, NULL);
   sleep(3);
   pthread_create(&thread2, NULL, &client_loop, NULL);
 
   pthread_join(thread1, NULL);
   pthread_join(thread2, NULL);
-  */
-  main_loop();
+
+  /*main_loop();*/
 
   return 0;
 }

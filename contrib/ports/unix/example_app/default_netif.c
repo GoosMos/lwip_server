@@ -50,8 +50,8 @@ void init_default_netif(void)
 #endif
 {
 #if NO_SYS
-  netif_add(&netif, NETIF_ADDRS NULL, tapif_init, netif_input);
-  /*netif_add(&netif, NETIF_ADDRS NULL, netif_loopif_init, ip4_input);*/
+  /*netif_add(&netif, NETIF_ADDRS NULL, tapif_init, netif_input);*/
+  netif_add(&netif, NETIF_ADDRS NULL, netif_loopif_init, ip4_input);
 #else
   netif_add(&netif, NETIF_ADDRS NULL, tapif_init, tcpip_input);
 #endif
